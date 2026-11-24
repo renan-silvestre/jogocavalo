@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Jogo do Cavalo</title>
+  <style>
+    body { margin: 0; background: #222; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: monospace; color: #fff; }
+    canvas { width: 960px; max-width: 100vw; image-rendering: pixelated; }
+    p { margin: 8px; }
+  </style>
+</head>
+<body>
+  <canvas id="tela" width="480" height="270"></canvas>
+  <p>Escolha um cavalo (1-4) e aperte ESPAÇO para correr</p>
+
+  <script>
+    const canvas = document.getElementById('tela');
+    const ctx = canvas.getContext('2d');
+    const fundo = new Image();
+    fundo.src = 'fundo.png';
+
+    const CHEGADA = 270; // x da linha de chegada no fundo.png
+    const cores = ['#d33', '#33d', '#fc0', '#a3a'];
+    const pistas = [81, 120, 160, 200]; // centro de cada raia
+
+    let cavalos, estado, aposta = 0, vencedor = null;
+
+    function reiniciar() {
+      cavalos = cores.map((cor, i) => ({ x: 10, y: pistas[i], cor }));
+      estado = 'parado';
+      vencedor = null;
+    }
+
+    function desenharCavalo(c) {
+      ctx.fillStyle = c.cor;
+      ctx.fillRect(c.x, c.y - 6, 20, 10);       // corpo
+      ctx.fillRect(c.x + 16, c.y - 14, 6, 10);  // pescoço
+      ctx.fillRect(c.x + 18, c.y - 16, 9, 5);   // cabeça
+      ctx.fillStyle = '#532';
+      const passo = estado === 'correndo' ? Math.floor(c.x / 4) % 2 * 3 : 0;
+      ctx.fillRect(c.x + 1 + passo, c.y + 4, 3, 7); // pernas
+      ctx.fillRect(c.x + 15 - passo, c.y + 4, 3, 7);
+    }
+
+    function atualizar() {
+      if (estado !== 'correndo') return;
+      for (const [i, c] of cavalos.entries()) {
+        c.x += Math.random() * 1.5;
+        if (c.x + 27 >= CHEGADA && vencedor === null) {
+          vencedor = i;
+          estado = 'fim';
+        }
+      }
+    }
+
+    function desenhar() {
+      ctx.drawImage(fundo, 0, 0);
+      cavalos.forEach(desenharCavalo);
+
+      ctx.fillStyle = '#000';
+      ctx.font = '10px monospace';
+      ctx.fillText(`Sua aposta: cavalo ${aposta + 1}`, 6, 12);
+
+      if (estado === 'fim') {
+        const ganhou = vencedor === aposta;
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        ctx.fillRect(140, 110, 200, 50);
+        ctx.fillStyle = ganhou ? '#6f6' : '#f66';
+        ctx.font = '14px monospace';
+        ctx.fillText(`Cavalo ${vencedor + 1} venceu!`, 170, 130);
+        ctx.fillText(ganhou ? 'Você ganhou!' : 'Você perdeu!', 190, 150);
+      }
+    }
+
+    function loop() {
+      atualizar();
+      desenhar();
+      requestAnimationFrame(loop);
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (['1', '2', '3', '4'].includes(e.key) && estado !== 'correndo') {
+        aposta = Number(e.key) - 1;
+      }
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (estado === 'fim') reiniciar();
+        else if (estado === 'parado') estado = 'correndo';
+      }
+    });
+
+    reiniciar();
+    fundo.onload = loop;
+  </script>
+</body>
+</html>

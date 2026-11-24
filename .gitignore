@@ -1,0 +1,6 @@
+# instruções pessoais pro Claude
+CLAUDE.local.md
+
+# lixo do Code Runner e do Python
+tempCodeRunnerFile.*
+__pycache__/
